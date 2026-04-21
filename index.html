@@ -24,12 +24,15 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
 .tab{padding:6px 14px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:500;cursor:pointer;color:var(--text3);background:transparent;border:1px solid transparent;border-radius:4px;transition:all .15s;font-family:'DM Sans',sans-serif;}
 .tab:hover{color:var(--text2);border-color:var(--border);}
 .tab.active{color:var(--text);background:var(--surface2);border-color:var(--border2);}
-#setup-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end;}
+#setup-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px;display:flex;flex-direction:column;gap:16px;}
+#setup-fields{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;align-items:end;}
 .sg{display:flex;flex-direction:column;gap:6px;}
-.sg label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;}
-.sg input{width:80px;padding:7px 10px;font-size:14px;font-family:'DM Mono',monospace;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text);outline:none;}
-.sg input:focus{border-color:var(--blue);}
-#btn-start{padding:8px 20px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;font-family:'DM Sans',sans-serif;background:var(--blue);color:#0d1a26;border:none;border-radius:5px;cursor:pointer;transition:opacity .15s;}
+.sg label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;white-space:nowrap;}
+.sg input,.sg select{width:100%;padding:7px 10px;font-size:13px;font-family:'DM Mono',monospace;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text);outline:none;cursor:pointer;box-sizing:border-box;}
+.sg input:focus,.sg select:focus{border-color:var(--blue);}
+#sg-color{visibility:hidden;pointer-events:none;}
+#sg-color.visible{visibility:visible;pointer-events:auto;}
+#btn-start{align-self:flex-start;padding:8px 22px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;font-family:'DM Sans',sans-serif;background:var(--blue);color:#0d1a26;border:none;border-radius:5px;cursor:pointer;transition:opacity .15s;}
 #btn-start:hover{opacity:.85;}
 #game-area{display:none;}
 #status-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;min-height:40px;}
@@ -128,8 +131,9 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
   #pbadge{font-size:9px;padding:2px 6px;}
   /* setup */
   #setup-panel{gap:12px;padding:14px;}
-  .sg input{width:65px;font-size:13px;}
-  #btn-start{padding:7px 14px;}
+  #setup-fields{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .sg input,.sg select{font-size:13px;}
+  #btn-start{padding:7px 14px;width:100%;}
   /* tabs */
   .tab{padding:5px 10px;font-size:10px;}
   /* log */
@@ -152,9 +156,44 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
 .demo-wrap{margin:14px 0 18px;text-align:center;}
 .demo-canvas{border:1px solid var(--border);border-radius:6px;background:#f5f4f0;max-width:100%;height:auto;}
 .demo-caption{font-size:12px;color:var(--text3);margin-top:6px;font-style:italic;}
+
+/* ── Piece animation overlay ── */
+#anim-layer{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;}
+.anim-slab{position:absolute;border-radius:3px;pointer-events:none;will-change:transform,opacity;transition:transform var(--anim-dur,320ms) cubic-bezier(0.22,1,0.36,1), opacity var(--anim-dur,320ms) ease;}
+.anim-slab.white{background:#ffffff;border:1.5px solid #aaa;box-shadow:0 2px 8px rgba(0,0,0,.18);}
+.anim-slab.black{background:#222222;border:1.5px solid #555;box-shadow:0 2px 8px rgba(0,0,0,.35);}
+
+/* cell place animation */
+@keyframes placeIn{
+  0%{transform:scale(0.45) translateY(-6px);opacity:0;}
+  60%{transform:scale(1.09) translateY(1px);opacity:1;}
+  100%{transform:scale(1) translateY(0);opacity:1;}
+}
+@keyframes removeOut{
+  0%{transform:scale(1);opacity:1;}
+  40%{transform:scale(1.1);opacity:.9;}
+  100%{transform:scale(0.3) translateY(8px);opacity:0;}
+}
+@keyframes winPulse{
+  0%,100%{box-shadow:0 0 0 0 rgba(109,181,138,.5);}
+  50%{box-shadow:0 0 0 6px rgba(109,181,138,.0);}
+}
+.slab.anim-place{animation:placeIn 280ms cubic-bezier(0.22,1,0.36,1) both;}
+.slab.anim-remove{animation:removeOut 240ms ease forwards;}
+.cell.wc .slab{animation:winPulse 1.2s ease-in-out infinite;}
+
+/* AI thinking dot pulse */
+@keyframes thinkPulse{0%,100%{opacity:1;}50%{opacity:0.25;}}
+#sdot.think{background:var(--amber);animation:thinkPulse 0.8s ease-in-out infinite;}
+
+/* sound toggle */
+#sound-btn{padding:5px 13px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:500;background:transparent;border:1px solid var(--border2);border-radius:4px;cursor:pointer;color:var(--text3);font-family:'DM Sans',sans-serif;transition:all .15s;display:flex;align-items:center;gap:5px;}
+#sound-btn:hover{border-color:var(--border);color:var(--text2);}
+#sound-btn.on{color:var(--text2);border-color:var(--border);}
 </style>
 </head>
 <body>
+<div id="anim-layer"></div>
 <div id="app">
   <div id="header">
     <h1>Shove</h1>
@@ -167,8 +206,26 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
 
   <div id="game-tab">
     <div id="setup-panel">
-      <div class="sg"><label>Board size (N×N)</label><input type="number" id="inp-size" value="6" min="4" max="12"></div>
-      <div class="sg"><label>Slabs per player</label><input type="number" id="inp-slabs" value="18" min="4" max="60"></div>
+      <div id="setup-fields">
+        <div class="sg"><label>Board size (N×N)</label><input type="number" id="inp-size" value="4" min="4" max="12"></div>
+        <div class="sg"><label>Slabs per player</label><input type="number" id="inp-slabs" value="8" min="4" max="60"></div>
+        <div class="sg">
+          <label>Opponent</label>
+          <select id="inp-mode" onchange="updateColorVisibility()">
+            <option value="human" selected>Human</option>
+            <option value="easy">AI — Easy</option>
+            <option value="medium">AI — Medium</option>
+            <option value="hard">AI — Hard</option>
+          </select>
+        </div>
+        <div class="sg" id="sg-color">
+          <label>Play as</label>
+          <select id="inp-color">
+            <option value="white">White (first)</option>
+            <option value="black">Black (second)</option>
+          </select>
+        </div>
+      </div>
       <button id="btn-start" onclick="startGame()">Start game</button>
     </div>
     <div id="game-area">
@@ -205,6 +262,7 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
       </div>
       <div id="controls">
         <button class="cbtn" onclick="resetToSetup()">New game</button>
+        <button id="sound-btn" class="on" onclick="toggleSound()" title="Toggle sound">♪ Sound on</button>
       </div>
       <div id="winner-wrap"><div id="winner-icon">◆</div><div id="winner-msg"></div></div>
       <div id="log-wrap"><div id="log-lbl">Move log</div><div id="log"></div></div>
@@ -288,10 +346,186 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
 </div>
 
 <script>
-let SIZE=6,TOTAL_SLABS=18,HALF=18;
+// ── Audio Engine (Web Audio API — no files needed) ─────────────────────────
+let audioCtx = null;
+let soundEnabled = true;
+
+function getAudioCtx(){
+  if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  const btn = document.getElementById('sound-btn');
+  btn.textContent = soundEnabled ? '♪ Sound on' : '♪ Sound off';
+  btn.className = soundEnabled ? 'on' : '';
+}
+
+function playSound(type){
+  if(!soundEnabled) return;
+  try{
+    const ctx = getAudioCtx();
+    const t = ctx.currentTime;
+    switch(type){
+      case 'place': {
+        // Soft, satisfying thud — two-layer: low thump + bright click
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc.type='sine'; osc.frequency.setValueAtTime(200,t); osc.frequency.exponentialRampToValueAtTime(80,t+0.12);
+        gain.gain.setValueAtTime(0.38,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.18);
+        osc2.type='triangle'; osc2.frequency.setValueAtTime(1800,t); osc2.frequency.exponentialRampToValueAtTime(600,t+0.06);
+        gain2.gain.setValueAtTime(0.1,t); gain2.gain.exponentialRampToValueAtTime(0.001,t+0.07);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc2.connect(gain2); gain2.connect(ctx.destination);
+        osc.start(t); osc.stop(t+0.2);
+        osc2.start(t); osc2.stop(t+0.09);
+        break;
+      }
+      case 'move': {
+        // Smooth whoosh slide
+        const buf = ctx.createBuffer(1,ctx.sampleRate*0.15,ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for(let i=0;i<data.length;i++) data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,1.5);
+        const src = ctx.createBufferSource();
+        const bpf = ctx.createBiquadFilter();
+        const gain = ctx.createGain();
+        bpf.type='bandpass'; bpf.frequency.setValueAtTime(1200,t); bpf.frequency.exponentialRampToValueAtTime(400,t+0.14); bpf.Q.value=0.8;
+        gain.gain.setValueAtTime(0.22,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.14);
+        src.buffer=buf; src.connect(bpf); bpf.connect(gain); gain.connect(ctx.destination);
+        src.start(t);
+        break;
+      }
+      case 'push': {
+        // Heavier thunk — multiple slabs colliding
+        for(let i=0;i<3;i++){
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const delay = i*0.04;
+          osc.type='sawtooth'; osc.frequency.setValueAtTime(180-i*30,t+delay); osc.frequency.exponentialRampToValueAtTime(60,t+delay+0.15);
+          gain.gain.setValueAtTime(0.28-i*0.07,t+delay); gain.gain.exponentialRampToValueAtTime(0.001,t+delay+0.18);
+          const filt = ctx.createBiquadFilter(); filt.type='lowpass'; filt.frequency.value=800;
+          osc.connect(filt); filt.connect(gain); gain.connect(ctx.destination);
+          osc.start(t+delay); osc.stop(t+delay+0.2);
+        }
+        break;
+      }
+      case 'pushoff': {
+        // Falling off — descending pitch sweep
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type='sine'; osc.frequency.setValueAtTime(400,t); osc.frequency.exponentialRampToValueAtTime(40,t+0.35);
+        gain.gain.setValueAtTime(0.3,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.35);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t+0.38);
+        break;
+      }
+      case 'isolate': {
+        // Pop — quick chirp
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type='sine'; osc.frequency.setValueAtTime(900,t); osc.frequency.exponentialRampToValueAtTime(300,t+0.1);
+        gain.gain.setValueAtTime(0.2,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t+0.12);
+        break;
+      }
+      case 'win': {
+        // Ascending fanfare — major triad arpeggio
+        const notes=[523,659,784,1047];
+        notes.forEach((freq,i)=>{
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const delay = i*0.1;
+          osc.type='triangle'; osc.frequency.value=freq;
+          gain.gain.setValueAtTime(0,t+delay); gain.gain.linearRampToValueAtTime(0.25,t+delay+0.04);
+          gain.gain.setValueAtTime(0.25,t+delay+0.18); gain.gain.exponentialRampToValueAtTime(0.001,t+delay+0.5);
+          osc.connect(gain); gain.connect(ctx.destination);
+          osc.start(t+delay); osc.stop(t+delay+0.55);
+        });
+        break;
+      }
+      case 'illegal': {
+        // Short low buzz
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type='square'; osc.frequency.value=120;
+        gain.gain.setValueAtTime(0.08,t); gain.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t); osc.stop(t+0.12);
+        break;
+      }
+    }
+  }catch(e){}
+}
+
+// ── Animation helpers ──────────────────────────────────────────────────────
+// Animate a slab flying from one board cell to another using fixed-position overlay
+function animateSlabFly(fromKey, toKey, color, onComplete, duration=290){
+  const fromEl = document.querySelector(`[data-key="${fromKey}"]`);
+  const toEl   = document.querySelector(`[data-key="${toKey}"]`);
+  if(!fromEl || !toEl){ if(onComplete) onComplete(); return; }
+
+  const fr = fromEl.getBoundingClientRect();
+  const tr = toEl.getBoundingClientRect();
+  const layer = document.getElementById('anim-layer');
+
+  const slab = document.createElement('div');
+  slab.className = `anim-slab ${color}`;
+  // Size matches .slab (68% of cell)
+  const sz = fr.width * 0.68;
+  const pad = fr.width * 0.16;
+  slab.style.cssText = `
+    width:${sz}px;height:${sz}px;
+    left:${fr.left + pad}px;top:${fr.top + pad}px;
+    --anim-dur:${duration}ms;
+  `;
+  layer.appendChild(slab);
+
+  // Force reflow then animate
+  slab.getBoundingClientRect();
+  const dx = (tr.left + pad) - (fr.left + pad);
+  const dy = (tr.top  + pad) - (fr.top  + pad);
+  slab.style.transform = `translate(${dx}px, ${dy}px)`;
+
+  setTimeout(()=>{
+    slab.remove();
+    if(onComplete) onComplete();
+  }, duration + 20);
+}
+
+// Animate the place-in bounce on a cell
+function animatePlaceIn(key){
+  const el = document.querySelector(`[data-key="${key}"] .slab`);
+  if(!el) return;
+  el.classList.remove('anim-place');
+  void el.offsetWidth; // reflow
+  el.classList.add('anim-place');
+}
+
+// Animate remove-out then call done
+function animateRemove(key, onComplete){
+  const el = document.querySelector(`[data-key="${key}"] .slab`);
+  if(!el){ if(onComplete) onComplete(); return; }
+  el.classList.add('anim-remove');
+  setTimeout(()=>{ if(onComplete) onComplete(); }, 230);
+}
+
+
 let board={},reserves={white:18,black:18};
 let currentPlayer='white',turnPhase='place';
 let selected=null,validMoves=[],gameOver=false,logEntries=[];
+let aiMode='human'; // 'human'|'easy'|'medium'|'hard'
+let aiThinking=false;
+let humanColor='white'; // which color the human plays
+
+function updateColorVisibility(){
+  const isAI=document.getElementById('inp-mode').value!=='human';
+  document.getElementById('sg-color').classList.toggle('visible',isAI);
+}
 
 function showTab(t){
   document.getElementById('game-tab').style.display=t==='game'?'block':'none';
@@ -404,6 +638,7 @@ function applyMoveOnBoard(fromKey,toKey){
     board[toKey]=board[fromKey];delete board[fromKey];
   }
   const toRemove=Object.keys(board).filter(k=>hadNbr.has(k)&&!hasNbr(k));
+  if(toRemove.length>0) setTimeout(()=>playSound('isolate'),60);
   for(const k of toRemove){
     const owner=board[k];reserves[owner]++;delete board[k];
     addLog(`  — ${cap(owner)} isolated at ${nota(k)} → reserve`);
@@ -496,6 +731,7 @@ function declareWin(winner,reason){
   document.getElementById('pbadge').className='done';
   document.getElementById('pbadge').textContent='Over';
   addLog('◆ '+msg);
+  setTimeout(()=>playSound('win'), 100);
 }
 
 function addLog(msg){logEntries.unshift(msg);if(logEntries.length>40)logEntries.pop();}
@@ -504,6 +740,9 @@ function doPlace(c,r){
   const k=ck(c,r);
   addLog(`${cap(currentPlayer)} placed ${nota(k)}`);
   board[k]=currentPlayer;reserves[currentPlayer]--;
+  playSound('place');
+  renderAll();
+  animatePlaceIn(k);
   // After placing, check if this player has any legal move
   if(checkCanMove()){renderAll();return;}
   turnPhase='move';selected=null;validMoves=[];
@@ -513,30 +752,124 @@ function doPlace(c,r){
 function doMove(fromKey,toKey){
   addLog(`${cap(currentPlayer)} moved ${nota(fromKey)} → ${nota(toKey)}`);
   const wasPush=!!board[toKey];
+
+  if(!wasPush){
+    // Simple move: fly the slab, then commit
+    const color = board[fromKey];
+    playSound('move');
+    // Hide the real slab immediately during flight
+    const fromEl = document.querySelector(`[data-key="${fromKey}"] .slab`);
+    if(fromEl) fromEl.style.opacity='0';
+    animateSlabFly(fromKey, toKey, color, ()=>{
+      applyMoveOnBoard(fromKey,toKey);
+      if(checkWinAfterMove(false)){renderAll();return;}
+      currentPlayer=currentPlayer==='white'?'black':'white';
+      turnPhase='place'; selected=null; validMoves=[];
+      renderAll();
+      animatePlaceIn(toKey);
+      setTimeout(scheduleAiMove, 120);
+    }, 280);
+  } else {
+    // Push: compute line, fly all slabs, then commit
+    const[fc,fr]=fromKey.split(',').map(Number);
+    const[tc,tr]=toKey.split(',').map(Number);
+    const dc=tc-fc, dr=tr-fr;
+    const ndc=dc?dc/Math.abs(dc):0, ndr=dr?dr/Math.abs(dr):0;
+    const line=getLine(fc,fr,ndc,ndr);
+    const all=[fromKey,...line];
+
+    // Determine which slabs will be pushed off
+    const pushedOff=new Set();
+    all.forEach(k=>{
+      const[kc,kr]=k.split(',').map(Number);
+      const nc2=kc+ndc, nr2=kr+ndr;
+      if(nc2<0||nc2>=SIZE||nr2<0||nr2>=SIZE) pushedOff.add(k);
+    });
+
+    playSound(pushedOff.size>0 ? 'pushoff' : 'push');
+
+    // Hide all real slabs in the line
+    all.forEach(k=>{
+      const el=document.querySelector(`[data-key="${k}"] .slab`);
+      if(el) el.style.opacity='0';
+    });
+
+    let completed=0;
+    all.forEach((k,i)=>{
+      const[kc,kr]=k.split(',').map(Number);
+      const nc2=kc+ndc, nr2=kr+ndr;
+      const destKey=ck(nc2,nr2);
+      const color=board[k];
+      const isOff=nc2<0||nc2>=SIZE||nr2<0||nr2>=SIZE;
+
+      if(isOff){
+        // Fly toward edge then fade
+        const fromEl=document.querySelector(`[data-key="${k}"] .slab`);
+        const cellEl=document.querySelector(`[data-key="${k}"]`);
+        if(cellEl){
+          const fr2=cellEl.getBoundingClientRect();
+          const layer=document.getElementById('anim-layer');
+          const slab=document.createElement('div');
+          slab.className=`anim-slab ${color}`;
+          const sz=fr2.width*0.68, pad=fr2.width*0.16;
+          const offX=ndc*(fr2.width+10), offY=ndr*(fr2.height+10)*-1;
+          // board rows increase upward, screen y increases downward
+          const screenDy = -ndr * (fr2.height + 10);
+          const screenDx = ndc * (fr2.width + 10);
+          slab.style.cssText=`width:${sz}px;height:${sz}px;left:${fr2.left+pad}px;top:${fr2.top+pad}px;--anim-dur:260ms;`;
+          layer.appendChild(slab);
+          slab.getBoundingClientRect();
+          slab.style.transform=`translate(${screenDx*2}px,${screenDy*2}px) scale(0.4)`;
+          slab.style.opacity='0';
+          setTimeout(()=>{ slab.remove(); completed++;
+            if(completed===all.length) finishPush(fromKey,toKey,wasPush);
+          }, 300);
+        } else { completed++; if(completed===all.length) finishPush(fromKey,toKey,wasPush); }
+      } else {
+        animateSlabFly(k, destKey, color, ()=>{
+          completed++;
+          if(completed===all.length) finishPush(fromKey,toKey,wasPush);
+        }, 260);
+      }
+    });
+    if(all.length===0) finishPush(fromKey,toKey,wasPush);
+  }
+}
+
+function finishPush(fromKey,toKey,wasPush){
+  // Sound for any isolated pieces
+  const[fc,fr]=fromKey.split(',').map(Number);
+  const[tc,tr]=toKey.split(',').map(Number);
+  const dc=tc-fc, dr=tr-fr;
+  const ndc=dc?dc/Math.abs(dc):0, ndr=dr?dr/Math.abs(dr):0;
+  const hadNbr=new Set(Object.keys(board).filter(k=>hasNbr(k)));
   applyMoveOnBoard(fromKey,toKey);
-  if(checkWinAfterMove(wasPush)){renderAll();return;}
+  // Check if any isolations occurred (by comparing hadNbr to current)
+  const nowIsolated=Object.keys(board).length < Object.keys(hadNbr).size-1;
+  if(checkWinAfterMove(wasPush)){renderAll();playSound('win');return;}
   currentPlayer=currentPlayer==='white'?'black':'white';
-  turnPhase='place';
-  selected=null;validMoves=[];
+  turnPhase='place'; selected=null; validMoves=[];
   renderAll();
+  animatePlaceIn(toKey);
+  setTimeout(scheduleAiMove, 120);
 }
 
 function onCellClick(c,r){
-  if(gameOver)return;
+  if(gameOver||aiThinking)return;
   const k=ck(c,r);
   if(turnPhase==='place'){
-    if(board[k]){setStat('That square is occupied.');return;}
-    if(reserves[currentPlayer]===0){setStat('Reserve is empty — you cannot place.');return;}
-    if(isAdjToOpp(c,r)){setStat('Cannot place adjacent to an opponent slab.');return;}
+    if(board[k]){playSound('illegal');setStat('That square is occupied.');return;}
+    if(reserves[currentPlayer]===0){playSound('illegal');setStat('Reserve is empty — you cannot place.');return;}
+    if(isAdjToOpp(c,r)){playSound('illegal');setStat('Cannot place adjacent to an opponent slab.');return;}
     doPlace(c,r);
   }else{
     if(selected){
       if(validMoves.includes(k)){doMove(selected,k);selected=null;validMoves=[];}
       else if(board[k]===currentPlayer){selected=k;validMoves=getMoveTargets(c,r);renderAll();}
-      else{selected=null;validMoves=[];renderAll();}
+      else{playSound('illegal');selected=null;validMoves=[];renderAll();}
     }else{
       if(board[k]===currentPlayer){selected=k;validMoves=getMoveTargets(c,r);renderAll();}
-      else setStat('Select one of your slabs to move.');
+      else {playSound('illegal');setStat('Select one of your slabs to move.');}
     }
   }
 }
@@ -551,7 +884,7 @@ function onTouchStart(e,c,r){
 }
 
 function onTouchEnd(e,c,r){
-  if(gameOver)return;
+  if(gameOver||aiThinking)return;
   const t=e.changedTouches[0];
   const dx=t.clientX-touchStart.x;
   const dy=t.clientY-touchStart.y;
@@ -600,12 +933,20 @@ function startGame(){
   SIZE=Math.max(4,Math.min(12,parseInt(document.getElementById('inp-size').value)||6));
   TOTAL_SLABS=Math.max(4,Math.min(60,parseInt(document.getElementById('inp-slabs').value)||18));
   HALF=Math.ceil(SIZE*SIZE/2);
+  aiMode=document.getElementById('inp-mode').value;
+  humanColor=aiMode!=='human'?document.getElementById('inp-color').value:'white';
   board={};reserves={white:TOTAL_SLABS,black:TOTAL_SLABS};
   currentPlayer='white';turnPhase='place';
-  selected=null;validMoves=[];gameOver=false;logEntries=[];
+  selected=null;validMoves=[];gameOver=false;logEntries=[];aiThinking=false;
   document.getElementById('game-area').style.display='block';
   document.getElementById('winner-wrap').classList.remove('show');
+  // Update header subtitle
+  const sub=document.getElementById('header-sub');
+  if(aiMode==='human') sub.textContent='Two-player strategy';
+  else sub.textContent='vs AI ('+aiMode+') — you are '+humanColor;
   renderAll();
+  // If human plays black, AI (white) goes first
+  if(aiMode!=='human'&&humanColor==='black') setTimeout(scheduleAiMove,300);
 }
 
 function resetToSetup(){
@@ -636,9 +977,12 @@ function renderAll(){
     document.getElementById('sdot').className=isPlace?'place':'move';
     document.getElementById('pbadge').className=isPlace?'place':'move';
     document.getElementById('pbadge').textContent=isPlace?'Place':'Move';
+    const aiColor2=humanColor==='white'?'black':'white';
+    const isHumanTurn=aiMode==='human'||currentPlayer===humanColor;
+    const whoPrefix=aiMode!=='human'?(isHumanTurn?'Your turn':"AI's turn"):cap(currentPlayer)+"'s turn";
     setStat(isPlace
-      ?`${cap(currentPlayer)}'s turn — place a slab`
-      :`${cap(currentPlayer)}'s turn — ${selected?'choose destination':'select a slab to move'}`);
+      ?`${whoPrefix} — place a slab`
+      :`${whoPrefix} — ${selected?'choose destination':'select a slab to move'}`);
   }
   const vp=turnPhase==='place'&&!gameOver?new Set(getValidPlacements()):new Set();
   const cl=document.getElementById('col-labels');
@@ -669,6 +1013,284 @@ function renderAll(){
     grid.appendChild(row);
   }
   document.getElementById('log').innerHTML=logEntries.map(e=>`<div class="le">${e}</div>`).join('');
+}
+
+
+// ── AI Engine ────────────────────────────────────────────────────────────────
+
+// Deep clone board state for simulation
+function cloneState(b, r){ return {board:Object.assign({},b), reserves:{white:r.white, black:r.black}}; }
+
+// Generate all legal full turns (place+move) for a player on a given state
+function generateTurns(state, player){
+  const {board:b, reserves:r} = state;
+  const opp = player==='white'?'black':'white';
+  const turns = [];
+
+  // Get valid placements
+  const placements = [];
+  if(r[player]>0){
+    for(let c=0;c<SIZE;c++) for(let rr=0;rr<SIZE;rr++){
+      const k=ck(c,rr);
+      if(b[k]) continue;
+      // check not adjacent to opponent
+      const adjOpp = [[0,1],[0,-1],[1,0],[-1,0]].some(([dc,dr])=>{
+        const n=ck(c+dc,rr+dr);
+        return c+dc>=0&&c+dc<SIZE&&rr+dr>=0&&rr+dr<SIZE&&b[n]===opp;
+      });
+      if(!adjOpp) placements.push(k);
+    }
+  }
+  if(!placements.length) return turns; // can't place = no turns
+
+  for(const placeKey of placements){
+    // Simulate placement
+    const b2=Object.assign({},b);
+    b2[placeKey]=player;
+    const r2={white:r.white,black:r.black}; r2[player]--;
+    const state2={board:b2,reserves:r2};
+
+    // Get moves from this placement state
+    const moves = getMoveTargetsOnBoard(b2, player);
+    if(!moves.length) continue;
+
+    for(const [fromKey,toKey] of moves){
+      turns.push({placeKey, fromKey, toKey});
+    }
+  }
+  return turns;
+}
+
+// Get all (from,to) move pairs for a player given a board
+function getMoveTargetsOnBoard(b, player){
+  const pairs=[];
+  for(const [k,o] of Object.entries(b)){
+    if(o!==player) continue;
+    const [c,r]=k.split(',').map(Number);
+    for(const [dc,dr] of [[0,1],[0,-1],[1,0],[-1,0]]){
+      const nc=c+dc, nr=r+dr;
+      if(nc<0||nc>=SIZE||nr<0||nr>=SIZE) continue;
+      const nk=ck(nc,nr);
+      if(!b[nk]){pairs.push([k,nk]); continue;}
+      if(canPushOnBoard(b,c,r,dc,dr,player)) pairs.push([k,nk]);
+    }
+  }
+  return pairs;
+}
+
+function canPushOnBoard(b,c,r,dc,dr,player){
+  // same logic as canPush but operates on arbitrary board
+  const line=[];
+  let nc=c+dc,nr=r+dr;
+  while(nc>=0&&nc<SIZE&&nr>=0&&nr<SIZE){
+    const k=ck(nc,nr);
+    if(!b[k]) break;
+    line.push(k); nc+=dc; nr+=dr;
+  }
+  if(!line.length) return false;
+  const lk=line[line.length-1];
+  const [lc,lr]=lk.split(',').map(Number);
+  const nc2=lc+dc, nr2=lr+dr;
+  const hasRoom=(nc2<0||nc2>=SIZE||nr2<0||nr2>=SIZE)||!b[ck(nc2,nr2)];
+  if(!hasRoom) return false;
+  const oppCount=line.filter(k=>b[k]!==player).length;
+  if(oppCount===0) return true;
+  let pushers=1+line.filter(k=>b[k]===player).length;
+  let bc=c-dc, br=r-dr;
+  while(bc>=0&&bc<SIZE&&br>=0&&br<SIZE){
+    if(b[ck(bc,br)]===player){pushers++;bc-=dc;br-=dr;}else break;
+  }
+  return pushers>=oppCount;
+}
+
+// Apply a full turn (place + move) to a cloned state, return new state
+function applyTurnToState(state, player, placeKey, fromKey, toKey){
+  let {board:b, reserves:r} = cloneState(state.board, state.reserves);
+  // Place
+  b[placeKey]=player; r[player]--;
+  // Move (push logic)
+  const [fc,fr]=fromKey.split(',').map(Number);
+  const [tc,tr]=toKey.split(',').map(Number);
+  const dc=tc-fc, dr=tr-fr;
+  const ndc=dc?dc/Math.abs(dc):0, ndr=dr?dr/Math.abs(dr):0;
+  const hadNbr=new Set(Object.keys(b).filter(k=>hasNbrOnBoard(b,k)));
+
+  if(b[toKey]){
+    // push line
+    const line=[];
+    let nc=fc+ndc, nr2=fr+ndr;
+    while(nc>=0&&nc<SIZE&&nr2>=0&&nr2<SIZE){
+      const k=ck(nc,nr2); if(!b[k]) break;
+      line.push(k); nc+=ndc; nr2+=ndr;
+    }
+    const all=[fromKey,...line];
+    for(let i=all.length-1;i>=0;i--){
+      const k=all[i]; const [kc,kr]=k.split(',').map(Number);
+      const nc2=kc+ndc, nr2b=kr+ndr;
+      if(nc2<0||nc2>=SIZE||nr2b<0||nr2b>=SIZE){
+        const owner=b[k]; delete b[k]; r[owner]++;
+      } else { const nk=ck(nc2,nr2b); b[nk]=b[k]; delete b[k]; }
+    }
+  } else { b[toKey]=b[fromKey]; delete b[fromKey]; }
+
+  // isolation removal
+  const toRemove=Object.keys(b).filter(k=>hadNbr.has(k)&&!hasNbrOnBoard(b,k));
+  for(const k of toRemove){ r[b[k]]++; delete b[k]; }
+
+  return {board:b, reserves:r};
+}
+
+function hasNbrOnBoard(b, k){
+  const [c,r]=k.split(',').map(Number);
+  return [[0,1],[0,-1],[1,0],[-1,0]].some(([dc,dr])=>{
+    const nc=c+dc, nr=r+dr;
+    return nc>=0&&nc<SIZE&&nr>=0&&nr<SIZE&&b[ck(nc,nr)];
+  });
+}
+
+function largestConnectedOnBoard(b, player){
+  const cells=Object.keys(b).filter(k=>b[k]===player);
+  const visited=new Set(); let max=0;
+  for(const start of cells){
+    if(visited.has(start)) continue;
+    const queue=[start]; visited.add(start); let size=0;
+    while(queue.length){
+      const cur=queue.shift(); size++;
+      const [c,r]=cur.split(',').map(Number);
+      for(const [dc,dr] of [[0,1],[0,-1],[1,0],[-1,0]]){
+        const nb=ck(c+dc,r+dr);
+        if(!visited.has(nb)&&b[nb]===player){ visited.add(nb); queue.push(nb); }
+      }
+    }
+    max=Math.max(max,size);
+  }
+  return max;
+}
+
+// Heuristic evaluation from perspective of 'player'
+function evaluate(state, player){
+  const opp=player==='white'?'black':'white';
+  const b=state.board, r=state.reserves;
+
+  // Check terminal states
+  const playerOnBoard=Object.values(b).filter(v=>v===player).length;
+  const oppOnBoard=Object.values(b).filter(v=>v===opp).length;
+  if(oppOnBoard===0) return 100000; // board cleared
+  if(playerOnBoard===0) return -100000;
+
+  const myConn=largestConnectedOnBoard(b,player);
+  const oppConn=largestConnectedOnBoard(b,opp);
+  if(myConn>=HALF) return 100000;
+  if(oppConn>=HALF) return -100000;
+
+  // Connection progress (main goal — heavily weighted)
+  const connScore = (myConn/HALF)*60 - (oppConn/HALF)*60;
+
+  // Board presence
+  const boardScore = playerOnBoard - oppOnBoard;
+
+  // Reserve pressure (having more reserve = more options)
+  const reserveScore = (r[player] - r[opp]) * 0.3;
+
+  // Push threats: how many opponent slabs are near the edge and pushable
+  let edgeThreat=0;
+  for(const [k,o] of Object.entries(b)){
+    if(o!==opp) continue;
+    const [c,rr]=k.split(',').map(Number);
+    const nearEdge=(c===0||c===SIZE-1||rr===0||rr===SIZE-1)?1:0;
+    edgeThreat += nearEdge * 0.5;
+  }
+
+  // Mobility
+  const myMoves=getMoveTargetsOnBoard(b,player).length;
+  const oppMoves=getMoveTargetsOnBoard(b,opp).length;
+  const mobilityScore=(myMoves-oppMoves)*0.1;
+
+  return connScore + boardScore*2 + reserveScore + edgeThreat + mobilityScore;
+}
+
+// Minimax with alpha-beta pruning
+function minimax(state, depth, alpha, beta, maximizing, aiPlayer){
+  const opp=aiPlayer==='white'?'black':'white';
+  const currentP=maximizing?aiPlayer:opp;
+  const turns=generateTurns(state,currentP);
+
+  if(depth===0||turns.length===0){
+    return {score:evaluate(state,aiPlayer), turn:null};
+  }
+
+  // Shuffle to add variety at same scores
+  const shuffled=[...turns].sort(()=>Math.random()-0.5);
+
+  let bestTurn=shuffled[0];
+  if(maximizing){
+    let best=-Infinity;
+    for(const t of shuffled){
+      const ns=applyTurnToState(state,currentP,t.placeKey,t.fromKey,t.toKey);
+      const {score}=minimax(ns,depth-1,alpha,beta,false,aiPlayer);
+      if(score>best){best=score;bestTurn=t;}
+      alpha=Math.max(alpha,best);
+      if(beta<=alpha) break;
+    }
+    return {score:best,turn:bestTurn};
+  } else {
+    let best=Infinity;
+    for(const t of shuffled){
+      const ns=applyTurnToState(state,currentP,t.placeKey,t.fromKey,t.toKey);
+      const {score}=minimax(ns,depth-1,alpha,beta,true,aiPlayer);
+      if(score<best){best=score;bestTurn=t;}
+      beta=Math.min(beta,best);
+      if(beta<=alpha) break;
+    }
+    return {score:best,turn:bestTurn};
+  }
+}
+
+function aiDepth(){
+  if(aiMode==='easy') return 1;
+  if(aiMode==='medium') return 2;
+  return 3; // hard
+}
+
+function scheduleAiMove(){
+  const aiColor=humanColor==='white'?'black':'white';
+  if(aiMode==='human'||currentPlayer!==aiColor||gameOver||aiThinking) return;
+  aiThinking=true;
+  setStat('AI is thinking…');
+  document.getElementById('sdot').className='think';
+  document.getElementById('pbadge').textContent='Think';
+  document.getElementById('pbadge').className='move';
+
+  // Run in a timeout so the UI updates first
+  setTimeout(()=>{
+    const state={board:Object.assign({},board),reserves:{white:reserves.white,black:reserves.black}};
+    const depth=aiDepth();
+    let turn;
+
+    if(aiMode==='easy'){
+      // Easy: depth 1 + sometimes pick random
+      const turns=generateTurns(state,aiColor);
+      if(!turns.length){aiThinking=false;return;}
+      if(Math.random()<0.4){
+        turn=turns[Math.floor(Math.random()*turns.length)];
+      } else {
+        const result=minimax(state,1,-Infinity,Infinity,true,aiColor);
+        turn=result.turn||turns[0];
+      }
+    } else {
+      const result=minimax(state,depth,-Infinity,Infinity,true,aiColor);
+      turn=result.turn;
+    }
+
+    aiThinking=false;
+    if(!turn||gameOver) return;
+    // Execute the AI's chosen turn
+    doPlace(...turn.placeKey.split(',').map(Number));
+    // After doPlace renders (place phase done), do the move
+    setTimeout(()=>{
+      if(!gameOver) doMove(turn.fromKey, turn.toKey);
+    }, 350);
+  }, 80);
 }
 
 // ── Demo animations ───────────────────────────────────────────────────────────
