@@ -98,21 +98,45 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
 .le{padding:1.5px 0;}
 #rules-area{display:none;}
 /* mobile */
-@media(max-width:600px){
-  body{padding:1rem .5rem 3rem;}
-  #header{margin-bottom:16px;padding-bottom:12px;}
-  h1{font-size:26px;}
-  #board-wrap{flex-direction:column;gap:10px;}
-  #sidebar{width:100%;flex-direction:row;flex-wrap:wrap;gap:6px;}
-  .pc{flex:1;min-width:80px;}
-  .ic{flex:1;min-width:140px;}
-  #setup-panel{gap:14px;}
-  .sg input{width:70px;}
-  #status-bar{padding:8px 12px;}
-  #stext{font-size:12px;}
-  #pbadge{font-size:9px;}
-  .rl{width:18px;font-size:9px;padding-right:3px;}
+@media(max-width:640px){
+  body{padding:.75rem .5rem 3rem;}
+  #app{max-width:100%;}
+  #header{margin-bottom:12px;padding-bottom:10px;}
+  h1{font-size:24px;}
+  #header-sub{display:none;}
+  /* board takes full width, sidebar goes below */
+  #board-wrap{flex-direction:column;gap:8px;}
+  #board-area{width:100%;}
+  #sidebar{
+    width:100%;flex-direction:row;flex-wrap:wrap;gap:6px;
+    order:2;
+  }
+  .pc{flex:1;min-width:0;padding:7px;}
+  .pc-val{font-size:17px;}
+  .pc-lbl{display:none;}
+  .pc-sub{font-size:9px;}
+  .ic{flex:2;min-width:140px;padding:7px;}
+  /* board cells fill the screen */
+  #grid{gap:2px;}
+  .brow{gap:2px;}
+  .rl{width:16px;font-size:9px;padding-right:2px;}
   .cl{font-size:9px;}
+  .cell{border-radius:2px;}
+  /* status bar compact */
+  #status-bar{padding:7px 10px;margin-bottom:10px;}
+  #stext{font-size:12px;}
+  #pbadge{font-size:9px;padding:2px 6px;}
+  /* setup */
+  #setup-panel{gap:12px;padding:14px;}
+  .sg input{width:65px;font-size:13px;}
+  #btn-start{padding:7px 14px;}
+  /* tabs */
+  .tab{padding:5px 10px;font-size:10px;}
+  /* log */
+  #log{font-size:10px;}
+  /* rules */
+  .rb{padding:16px;}
+  .rb h2{font-size:16px;}
 }
 .rb{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px 32px;line-height:1.75;color:var(--text2);font-size:14px;}
 .rb h2{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:var(--text);margin:28px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
