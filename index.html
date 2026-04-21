@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shove</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#eceae4; --surface:#ffffff; --surface2:#f5f4f0;
+  --border:#dddbd4; --border2:#c8c5bc;
+  --text:#1a1a18; --text2:#5f5e5a; --text3:#888780;
+  --ws:#ffffff; --wb:#aaa; --bs:#222222; --bb:#555;
+  --blue:#185fa5; --green:#1D9E75; --purple:#6655cc; --amber:#b07010;
+  --cell:#f0ede8; --cborder:#dddbd4;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem 4rem;}
+#app{width:100%;max-width:740px;}
+#header{display:flex;align-items:baseline;gap:12px;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var(--text);letter-spacing:-0.5px;}
+#header-sub{font-size:11px;color:var(--text3);letter-spacing:.1em;text-transform:uppercase;}
+#tabs{display:flex;gap:2px;margin-bottom:20px;}
+.tab{padding:6px 14px;font-size:11px;letter-spacing:.07em;text-transform:uppercase;font-weight:500;cursor:pointer;color:var(--text3);background:transparent;border:1px solid transparent;border-radius:4px;transition:all .15s;font-family:'DM Sans',sans-serif;}
+.tab:hover{color:var(--text2);border-color:var(--border);}
+.tab.active{color:var(--text);background:var(--surface2);border-color:var(--border2);}
+#setup-panel{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:20px;display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end;}
+.sg{display:flex;flex-direction:column;gap:6px;}
+.sg label{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;}
+.sg input{width:80px;padding:7px 10px;font-size:14px;font-family:'DM Mono',monospace;background:var(--surface2);border:1px solid var(--border2);border-radius:5px;color:var(--text);outline:none;}
+.sg input:focus{border-color:var(--blue);}
+#btn-start{padding:8px 20px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;font-family:'DM Sans',sans-serif;background:var(--blue);color:#0d1a26;border:none;border-radius:5px;cursor:pointer;transition:opacity .15s;}
+#btn-start:hover{opacity:.85;}
+#game-area{display:none;}
+#status-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;min-height:40px;}
+#sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transition:background .2s;}
+#sdot.place{background:var(--purple);box-shadow:0 0 6px rgba(155,143,212,.5);}
+#sdot.move{background:var(--green);box-shadow:0 0 6px rgba(109,181,138,.5);}
+#sdot.done{background:var(--amber);}
+#stext{font-size:13px;color:var(--text2);flex:1;}
+#pbadge{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;padding:3px 8px;border-radius:3px;}
+#pbadge.place{background:rgba(155,143,212,.12);color:var(--purple);border:1px solid rgba(155,143,212,.25);}
+#pbadge.move{background:rgba(109,181,138,.12);color:var(--green);border:1px solid rgba(109,181,138,.25);}
+#pbadge.done{background:rgba(212,169,107,.12);color:var(--amber);border:1px solid rgba(212,169,107,.25);}
+#board-wrap{display:flex;gap:16px;align-items:flex-start;}
+#board-area{flex:1;min-width:0;}
+#col-labels{display:flex;margin-bottom:4px;padding-left:26px;}
+.cl{flex:1;text-align:center;font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;}
+#grid{display:flex;flex-direction:column;gap:3px;}
+.brow{display:flex;gap:3px;align-items:center;}
+.rl{width:22px;font-size:10px;color:var(--text3);text-align:right;padding-right:5px;flex-shrink:0;font-family:'DM Mono',monospace;}
+.cell{flex:1;aspect-ratio:1/1;border-radius:3px;border:1px solid var(--cborder);background:var(--cell);cursor:pointer;display:flex;align-items:center;justify-content:center;position:relative;min-width:0;transition:border-color .1s,background .1s;}
+.cell:hover{border-color:var(--border2);background:var(--surface2);}
+.cell.sel{border-color:var(--blue);background:rgba(107,159,212,.08);}
+.cell.vm{border-color:var(--green);background:rgba(109,181,138,.07);}
+.cell.vm::after{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);opacity:.8;position:absolute;}
+.cell.vp{border-color:var(--purple);background:rgba(155,143,212,.07);}
+.cell.wc{border-color:var(--green);background:rgba(109,181,138,.14);}
+.slab{width:68%;height:68%;border-radius:2px;pointer-events:none;position:absolute;transition:transform .1s;}
+.slab.white{background:var(--ws);border:1.5px solid var(--wb);box-shadow:0 1px 3px rgba(0,0,0,.15);}
+.slab.black{background:var(--bs);border:1.5px solid var(--bb);box-shadow:0 1px 3px rgba(0,0,0,.25);}
+.slab.sel{outline:1.5px solid var(--blue);outline-offset:2px;}
+.cell:hover .slab{transform:scale(1.04);}
+#sidebar{width:110px;flex-shrink:0;display:flex;flex-direction:column;gap:6px;}
+.pc{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px;transition:border-color .2s;}
+.pc.aw{border-color:#378ADD;}
+.pc.ab{border-color:#378ADD;}
+.pc-hdr{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.pc-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0;}
+.pc-dot.white{background:var(--ws);border:1px solid var(--wb);}
+.pc-dot.black{background:var(--bs);border:1px solid var(--bb);}
+.pc-name{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);font-weight:500;}
+.pc-val{font-size:20px;font-family:'DM Mono',monospace;color:var(--text);line-height:1;}
+.pc-lbl{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-top:1px;}
+.pc-sub{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px;}
+.ic{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px;}
+.ic-title{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;margin-bottom:8px;}
+.cr{display:flex;align-items:center;gap:6px;margin-bottom:5px;}
+.cd{width:8px;height:8px;border-radius:1px;flex-shrink:0;}
+.cd.white{background:#aaa;border:1px solid #888;}
+.cd.black{background:#222;border:1px solid #555;}
+.cbw{flex:1;height:3px;background:var(--surface2);border-radius:2px;overflow:hidden;}
+.cbb{height:100%;border-radius:2px;transition:width .3s;}
+.cbb.white{background:#aaa;}
+.cbb.black{background:#333;}
+.cv{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);min-width:20px;text-align:right;}
+.cn{font-size:9px;color:var(--text3);text-align:center;margin-top:3px;}
+#controls{margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;}
+.cbtn{padding:5px 13px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:500;background:transparent;border:1px solid var(--border2);border-radius:4px;cursor:pointer;color:var(--text3);font-family:'DM Sans',sans-serif;transition:all .15s;}
+.cbtn:hover{border-color:var(--border);color:var(--text2);}
+#winner-wrap{display:none;margin-top:12px;padding:14px 16px;background:#eaf3de;border:1px solid #97c459;border-radius:6px;align-items:center;gap:10px;}
+#winner-wrap.show{display:flex;}
+#winner-icon{font-size:16px;color:#3b6d11;}
+#winner-msg{font-family:'DM Serif Display',serif;font-size:16px;color:#3b6d11;}
+#log-wrap{margin-top:12px;}
+#log-lbl{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);font-weight:500;margin-bottom:6px;}
+#log{font-size:11px;color:var(--text3);max-height:64px;overflow-y:auto;font-family:'DM Mono',monospace;border-left:2px solid var(--border);padding-left:10px;}
+.le{padding:1.5px 0;}
+#rules-area{display:none;}
+/* mobile */
+@media(max-width:600px){
+  body{padding:1rem .5rem 3rem;}
+  #header{margin-bottom:16px;padding-bottom:12px;}
+  h1{font-size:26px;}
+  #board-wrap{flex-direction:column;gap:10px;}
+  #sidebar{width:100%;flex-direction:row;flex-wrap:wrap;gap:6px;}
+  .pc{flex:1;min-width:80px;}
+  .ic{flex:1;min-width:140px;}
+  #setup-panel{gap:14px;}
+  .sg input{width:70px;}
+  #status-bar{padding:8px 12px;}
+  #stext{font-size:12px;}
+  #pbadge{font-size:9px;}
+  .rl{width:18px;font-size:9px;padding-right:3px;}
+  .cl{font-size:9px;}
+}
+.rb{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:28px 32px;line-height:1.75;color:var(--text2);font-size:14px;}
+.rb h2{font-family:'DM Serif Display',serif;font-size:18px;font-weight:400;color:var(--text);margin:28px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.rb h2:first-child{margin-top:0;}
+.rb h3{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin:16px 0 5px;}
+.rb p{margin-bottom:10px;}
+.rb ul{margin:4px 0 10px 18px;}
+.rb li{margin-bottom:5px;}
+.rb code{font-family:'DM Mono',monospace;font-size:12px;background:var(--surface2);border:1px solid var(--border);padding:1px 5px;border-radius:3px;color:var(--text);}
+.rb .ex{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--blue);padding:10px 14px;border-radius:0 5px 5px 0;font-family:'DM Mono',monospace;font-size:12px;margin:8px 0 12px;color:var(--text);white-space:pre;line-height:1.6;}
+.wr{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;}
+.rn{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#0d1a26;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;font-family:'DM Mono',monospace;}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>Shove</h1>
+    <span id="header-sub">Two-player strategy</span>
+  </div>
+  <div id="tabs">
+    <button class="tab active" onclick="showTab('game')">Game</button>
+    <button class="tab" onclick="showTab('rules')">Rules</button>
+  </div>
+
+  <div id="game-tab">
+    <div id="setup-panel">
+      <div class="sg"><label>Board size (N×N)</label><input type="number" id="inp-size" value="6" min="4" max="12"></div>
+      <div class="sg"><label>Slabs per player</label><input type="number" id="inp-slabs" value="18" min="4" max="60"></div>
+      <button id="btn-start" onclick="startGame()">Start game</button>
+    </div>
+    <div id="game-area">
+      <div id="status-bar">
+        <div id="sdot" class="place"></div>
+        <div id="stext">White's turn — place a slab</div>
+        <div id="pbadge" class="place">Place</div>
+      </div>
+      <div id="board-wrap">
+        <div id="board-area">
+          <div id="col-labels"></div>
+          <div id="grid"></div>
+        </div>
+        <div id="sidebar">
+          <div class="pc" id="pc-white">
+            <div class="pc-hdr"><div class="pc-dot white"></div><div class="pc-name">White</div></div>
+            <div class="pc-val" id="cnt-white">0</div>
+            <div class="pc-lbl">reserve</div>
+            <div class="pc-sub" id="board-white">board: 0</div>
+          </div>
+          <div class="pc" id="pc-black">
+            <div class="pc-hdr"><div class="pc-dot black"></div><div class="pc-name">Black</div></div>
+            <div class="pc-val" id="cnt-black">0</div>
+            <div class="pc-lbl">reserve</div>
+            <div class="pc-sub" id="board-black">board: 0</div>
+          </div>
+          <div class="ic">
+            <div class="ic-title">Connected</div>
+            <div class="cr"><div class="cd white"></div><div class="cbw"><div class="cbb white" id="bar-w" style="width:0%"></div></div><div class="cv" id="conn-w">0</div></div>
+            <div class="cr"><div class="cd black"></div><div class="cbw"><div class="cbb black" id="bar-b" style="width:0%"></div></div><div class="cv" id="conn-b">0</div></div>
+            <div class="cn" id="conn-need">need 0</div>
+          </div>
+        </div>
+      </div>
+      <div id="controls">
+        <button class="cbtn" onclick="resetToSetup()">New game</button>
+      </div>
+      <div id="winner-wrap"><div id="winner-icon">◆</div><div id="winner-msg"></div></div>
+      <div id="log-wrap"><div id="log-lbl">Move log</div><div id="log"></div></div>
+    </div>
+  </div>
+
+  <div id="rules-area">
+    <div class="rb">
+      <h2>Overview</h2>
+      <p>Shove is a two-player strategy game played on a square grid. Players take turns placing and pushing slabs, trying to achieve one of three winning conditions. The rules are few; the strategy runs deep.</p>
+      <h2>Components</h2>
+      <ul>
+        <li>A square grid board (default 6×6, configurable up to 12×12)</li>
+        <li>Two players: White and Black</li>
+        <li>Each player begins with a reserve of slabs (default 18), all off the board</li>
+      </ul>
+      <h2>Turn Structure</h2>
+      <p>White moves first. <strong style="color:var(--text)">Both steps are mandatory every turn.</strong> If either cannot be completed, you lose immediately.</p>
+      <h3>Step 1 — Place</h3>
+      <p>Take one slab from your reserve and place it on any empty square. You may not place on a square orthogonally adjacent to any opponent slab.</p>
+      <h3>Step 2 — Move</h3>
+      <p>Select one of your slabs and slide it one square orthogonally (up, down, left, right — no diagonals). If the destination is occupied, a push occurs.</p>
+      <h2>Pushing</h2>
+      <p>A push moves the entire contiguous line of slabs in the direction of travel by one square. It is legal only if the last slab has room (empty square or off the edge) and your pushing power meets or exceeds the opponent slabs in the line.</p>
+      <h3>Pushing power</h3>
+      <ul>
+        <li>The moving slab itself</li>
+        <li>All your slabs anywhere in the line ahead (non-contiguous counts)</li>
+        <li>All your slabs contiguously behind the moving slab</li>
+      </ul>
+      <p>Your own slabs in the line offer no resistance.</p>
+      <div class="ex">w w b b  →  2 pushers vs 2 blacks  →  legal
+w b w b  →  2 pushers vs 2 blacks  →  legal
+w b b b  →  1 pusher  vs 3 blacks  →  illegal</div>
+      <h2>Removal</h2>
+      <h3>Pushed off the edge</h3>
+      <p>Any slab pushed off the board returns to its owner's reserve and may be placed again.</p>
+      <h3>Isolation</h3>
+      <p>After every move, any slab that had at least one orthogonal neighbour before the move but has none after is removed and returned to reserve. Slabs already isolated before the move are unaffected.</p>
+      <p>A player may deliberately isolate their own slab to return it to reserve — useful for freeing placement squares or escaping worse outcomes.</p>
+      <h2>Winning</h2>
+      <p>Win conditions are checked immediately after the move step:</p>
+      <div class="wr"><span class="rn">1</span><span><strong style="color:var(--text)">No legal turn.</strong> Your opponent cannot place (reserve empty or all squares adjacent to your slabs) or cannot move or push any slab. Either alone is a loss.</span></div>
+      <div class="wr"><span class="rn">2</span><span><strong style="color:var(--text)">Board clear.</strong> After a push, your opponent has zero slabs on the board. Reserve does not matter.</span></div>
+      <div class="wr"><span class="rn">3</span><span><strong style="color:var(--text)">Connection.</strong> After a push, your slabs form a single orthogonally connected region covering at least half the squares of the board.</span></div>
+      <h2>Notation</h2>
+      <p>Each turn is two mandatory tokens separated by a space. Coordinates are written as <code>col,row</code>, both numbered from 1.</p>
+      <ul>
+        <li>Placement: <code>3,4</code></li>
+        <li>Move or push: <code>3,4-3,5</code></li>
+      </ul>
+      <p>White and black turns share a numbered line, separated by <code>|</code>:</p>
+      <div class="ex">1.  3,4 2,4-2,5  |  5,6 4,6-4,5
+2.  1,2 3,2-3,3  |  6,6 5,6-5,5</div>
+      <h2>Clarifications</h2>
+      <ul>
+        <li>Both steps are mandatory. Inability to complete either is an immediate loss.</li>
+        <li>Orthogonal means up, down, left, right only. Diagonals count for nothing.</li>
+        <li>The placement restriction applies only during placement. Movement may bring slabs into contact freely.</li>
+        <li>Slabs always return to reserve when removed. They may be placed again.</li>
+        <li>Win conditions 2 and 3 are triggered only by a push, not a simple move to an empty square.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+let SIZE=6,TOTAL_SLABS=18,HALF=18;
+let board={},reserves={white:18,black:18};
+let currentPlayer='white',turnPhase='place';
+let selected=null,validMoves=[],gameOver=false,logEntries=[];
+
+function showTab(t){
+  document.getElementById('game-tab').style.display=t==='game'?'block':'none';
+  document.getElementById('rules-area').style.display=t==='rules'?'block':'none';
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['game','rules'][i]===t));
+}
+
+function ck(c,r){return c+','+r;}
+function cap(s){return s[0].toUpperCase()+s.slice(1);}
+function nota(k){const[c,r]=k.split(',');return`${parseInt(c)+1},${parseInt(r)+1}`;}
+
+function orthNbrs(c,r){
+  return[[0,1],[0,-1],[1,0],[-1,0]].map(([dc,dr])=>{
+    const nc=c+dc,nr=r+dr;
+    return(nc>=0&&nc<SIZE&&nr>=0&&nr<SIZE)?ck(nc,nr):null;
+  }).filter(Boolean);
+}
+
+function hasNbr(k){
+  const[c,r]=k.split(',').map(Number);
+  return orthNbrs(c,r).some(n=>board[n]);
+}
+
+function isAdjToOpp(c,r){
+  const opp=currentPlayer==='white'?'black':'white';
+  return orthNbrs(c,r).some(n=>board[n]===opp);
+}
+
+function getValidPlacements(){
+  const v=[];
+  for(let c=0;c<SIZE;c++)for(let r=0;r<SIZE;r++){
+    const k=ck(c,r);
+    if(!board[k]&&!isAdjToOpp(c,r))v.push(k);
+  }
+  return v;
+}
+
+function getLine(c,r,dc,dr){
+  const line=[];
+  let nc=c+dc,nr=r+dr;
+  while(nc>=0&&nc<SIZE&&nr>=0&&nr<SIZE){
+    const k=ck(nc,nr);
+    if(!board[k])break;
+    line.push(k);nc+=dc;nr+=dr;
+  }
+  return line;
+}
+
+function canPush(c,r,dc,dr){
+  const line=getLine(c,r,dc,dr);
+  if(!line.length)return false;
+  const lk=line[line.length-1];
+  const[lc,lr]=lk.split(',').map(Number);
+  const nc2=lc+dc,nr2=lr+dr;
+  const hasRoom=(nc2<0||nc2>=SIZE||nr2<0||nr2>=SIZE)||!board[ck(nc2,nr2)];
+  if(!hasRoom)return false;
+  const oppCount=line.filter(k=>board[k]!==currentPlayer).length;
+  if(oppCount===0)return true;
+  let pushers=1+line.filter(k=>board[k]===currentPlayer).length;
+  let bc=c-dc,br=r-dr;
+  while(bc>=0&&bc<SIZE&&br>=0&&br<SIZE){
+    if(board[ck(bc,br)]===currentPlayer){pushers++;bc-=dc;br-=dr;}else break;
+  }
+  return pushers>=oppCount;
+}
+
+function getMoveTargets(c,r){
+  const t=[];
+  for(const[dc,dr]of[[0,1],[0,-1],[1,0],[-1,0]]){
+    const nc=c+dc,nr=r+dr;
+    if(nc<0||nc>=SIZE||nr<0||nr>=SIZE)continue;
+    const nk=ck(nc,nr);
+    if(!board[nk])t.push(nk);
+    else if(canPush(c,r,dc,dr))t.push(nk);
+  }
+  return t;
+}
+
+function anyMoveAvailable(player){
+  for(const[k,o]of Object.entries(board)){
+    if(o!==player)continue;
+    const[c,r]=k.split(',').map(Number);
+    if(getMoveTargets(c,r).length>0)return true;
+  }
+  return false;
+}
+
+function applyMoveOnBoard(fromKey,toKey){
+  const[fc,fr]=fromKey.split(',').map(Number);
+  const[tc,tr]=toKey.split(',').map(Number);
+  const dc=tc-fc,dr=tr-fr;
+  const ndc=dc?dc/Math.abs(dc):0,ndr=dr?dr/Math.abs(dr):0;
+  const hadNbr=new Set(Object.keys(board).filter(k=>hasNbr(k)));
+  if(board[toKey]){
+    const line=getLine(fc,fr,ndc,ndr);
+    const all=[fromKey,...line];
+    for(let i=all.length-1;i>=0;i--){
+      const k=all[i];
+      const[kc,kr]=k.split(',').map(Number);
+      const nc2=kc+ndc,nr2=kr+ndr;
+      if(nc2<0||nc2>=SIZE||nr2<0||nr2>=SIZE){
+        const owner=board[k];delete board[k];reserves[owner]++;
+        addLog(`  — ${cap(owner)} pushed off → reserve`);
+      }else{
+        const nk=ck(nc2,nr2);board[nk]=board[k];delete board[k];
+      }
+    }
+  }else{
+    board[toKey]=board[fromKey];delete board[fromKey];
+  }
+  const toRemove=Object.keys(board).filter(k=>hadNbr.has(k)&&!hasNbr(k));
+  for(const k of toRemove){
+    const owner=board[k];reserves[owner]++;delete board[k];
+    addLog(`  — ${cap(owner)} isolated at ${nota(k)} → reserve`);
+  }
+}
+
+function largestConnected(player){
+  const cells=Object.keys(board).filter(k=>board[k]===player);
+  const visited=new Set();let max=0;
+  for(const start of cells){
+    if(visited.has(start))continue;
+    const queue=[start];visited.add(start);let size=0;
+    while(queue.length){
+      const cur=queue.shift();size++;
+      const[c,r]=cur.split(',').map(Number);
+      for(const nb of orthNbrs(c,r)){
+        if(!visited.has(nb)&&board[nb]===player){visited.add(nb);queue.push(nb);}
+      }
+    }
+    max=Math.max(max,size);
+  }
+  return max;
+}
+
+function getWinCluster(player){
+  const cells=Object.keys(board).filter(k=>board[k]===player);
+  const visited=new Set();let best=[];
+  for(const start of cells){
+    if(visited.has(start))continue;
+    const queue=[start];visited.add(start);const cluster=[];
+    while(queue.length){
+      const cur=queue.shift();cluster.push(cur);
+      const[c,r]=cur.split(',').map(Number);
+      for(const nb of orthNbrs(c,r)){
+        if(!visited.has(nb)&&board[nb]===player){visited.add(nb);queue.push(nb);}
+      }
+    }
+    if(cluster.length>best.length)best=cluster;
+  }
+  return best.length>=HALF?best:[];
+}
+
+// Called after a move: check wins + whether opponent can place
+function checkWinAfterMove(afterPush){
+  const opp=currentPlayer==='white'?'black':'white';
+  // Board clear: only after a push
+  if(afterPush){
+    const oppOnBoard=Object.values(board).filter(v=>v===opp).length;
+    if(oppOnBoard===0){declareWin(currentPlayer,'board cleared by push');return true;}
+  }
+  // Connection win: after any move
+  const cluster=getWinCluster(currentPlayer);
+  if(cluster.length>=HALF){
+    declareWin(currentPlayer,`connected region of ${cluster.length} squares`);
+    cluster.forEach(k=>{const el=document.querySelector(`[data-key="${k}"]`);if(el)el.classList.add('wc');});
+    return true;
+  }
+  // Check opponent can place (step 1 of their turn)
+  const saved=currentPlayer; currentPlayer=opp;
+  const canPlace=reserves[opp]>0&&getValidPlacements().length>0;
+  currentPlayer=saved;
+  if(!canPlace){declareWin(currentPlayer,'opponent cannot place');return true;}
+  return false;
+}
+
+// Called after placement: check connection win + whether player has a legal move
+function checkCanMove(){
+  // Connection win after placement
+  const cluster=getWinCluster(currentPlayer);
+  if(cluster.length>=HALF){
+    declareWin(currentPlayer,`connected region of ${cluster.length} squares`);
+    cluster.forEach(k=>{const el=document.querySelector(`[data-key="${k}"]`);if(el)el.classList.add('wc');});
+    return true;
+  }
+  // Check if this player has any legal move
+  if(!anyMoveAvailable(currentPlayer)){
+    const winner=currentPlayer==='white'?'black':'white';
+    declareWin(winner,'opponent cannot move after placing');return true;
+  }
+  return false;
+}
+
+function declareWin(winner,reason){
+  gameOver=true;
+  const msg=`${cap(winner)} wins — ${reason}`;
+  document.getElementById('winner-msg').textContent=msg;
+  document.getElementById('winner-wrap').classList.add('show');
+  document.getElementById('stext').textContent=msg;
+  document.getElementById('sdot').className='done';
+  document.getElementById('pbadge').className='done';
+  document.getElementById('pbadge').textContent='Over';
+  addLog('◆ '+msg);
+}
+
+function addLog(msg){logEntries.unshift(msg);if(logEntries.length>40)logEntries.pop();}
+
+function doPlace(c,r){
+  const k=ck(c,r);
+  addLog(`${cap(currentPlayer)} placed ${nota(k)}`);
+  board[k]=currentPlayer;reserves[currentPlayer]--;
+  // After placing, check if this player has any legal move
+  if(checkCanMove()){renderAll();return;}
+  turnPhase='move';selected=null;validMoves=[];
+  renderAll();
+}
+
+function doMove(fromKey,toKey){
+  addLog(`${cap(currentPlayer)} moved ${nota(fromKey)} → ${nota(toKey)}`);
+  const wasPush=!!board[toKey];
+  applyMoveOnBoard(fromKey,toKey);
+  if(checkWinAfterMove(wasPush)){renderAll();return;}
+  currentPlayer=currentPlayer==='white'?'black':'white';
+  turnPhase='place';
+  selected=null;validMoves=[];
+  renderAll();
+}
+
+function onCellClick(c,r){
+  if(gameOver)return;
+  const k=ck(c,r);
+  if(turnPhase==='place'){
+    if(board[k]){setStat('That square is occupied.');return;}
+    if(reserves[currentPlayer]===0){setStat('Reserve is empty — you cannot place.');return;}
+    if(isAdjToOpp(c,r)){setStat('Cannot place adjacent to an opponent slab.');return;}
+    doPlace(c,r);
+  }else{
+    if(selected){
+      if(validMoves.includes(k)){doMove(selected,k);selected=null;validMoves=[];}
+      else if(board[k]===currentPlayer){selected=k;validMoves=getMoveTargets(c,r);renderAll();}
+      else{selected=null;validMoves=[];renderAll();}
+    }else{
+      if(board[k]===currentPlayer){selected=k;validMoves=getMoveTargets(c,r);renderAll();}
+      else setStat('Select one of your slabs to move.');
+    }
+  }
+}
+
+// ── Touch / swipe support ─────────────────────────────────────────────────────
+let touchStart={x:0,y:0,key:null};
+const SWIPE_MIN=20; // px threshold
+
+function onTouchStart(e,c,r){
+  const t=e.touches[0];
+  touchStart={x:t.clientX,y:t.clientY,key:ck(c,r),c,r};
+}
+
+function onTouchEnd(e,c,r){
+  if(gameOver)return;
+  const t=e.changedTouches[0];
+  const dx=t.clientX-touchStart.x;
+  const dy=t.clientY-touchStart.y;
+  const absDx=Math.abs(dx), absDy=Math.abs(dy);
+  const isSwipe=Math.max(absDx,absDy)>=SWIPE_MIN;
+
+  if(!isSwipe){
+    // Treat as tap
+    onCellClick(c,r);
+    return;
+  }
+
+  // It's a swipe — determine direction
+  let dc=0,dr=0;
+  if(absDx>absDy){ dc=dx>0?1:-1; }
+  else { dr=dy>0?-1:1; } // y increases downward, board rows increase upward
+
+  const k=ck(c,r);
+  if(turnPhase==='move'){
+    // If swiping on selected slab or own slab, attempt move in swipe direction
+    const isMySlab=board[k]===currentPlayer;
+    if(isMySlab){
+      // Select this slab if not already selected
+      const targets=getMoveTargets(c,r);
+      const nc=c+dc, nr=r+dr;
+      if(nc>=0&&nc<SIZE&&nr>=0&&nr<SIZE){
+        const dest=ck(nc,nr);
+        if(targets.includes(dest)){
+          if(selected!==k){selected=k;validMoves=targets;}
+          doMove(k,dest);
+          selected=null;validMoves=[];
+          return;
+        }
+      }
+      // Swipe direction not valid — just select
+      selected=k; validMoves=targets; renderAll();
+    }
+  }
+  // Placement phase swipe: ignore, treat as tap
+  else{ onCellClick(c,r); }
+}
+
+function setStat(msg){document.getElementById('stext').textContent=msg;}
+
+function startGame(){
+  SIZE=Math.max(4,Math.min(12,parseInt(document.getElementById('inp-size').value)||6));
+  TOTAL_SLABS=Math.max(4,Math.min(60,parseInt(document.getElementById('inp-slabs').value)||18));
+  HALF=Math.ceil(SIZE*SIZE/2);
+  board={};reserves={white:TOTAL_SLABS,black:TOTAL_SLABS};
+  currentPlayer='white';turnPhase='place';
+  selected=null;validMoves=[];gameOver=false;logEntries=[];
+  document.getElementById('game-area').style.display='block';
+  document.getElementById('winner-wrap').classList.remove('show');
+  renderAll();
+}
+
+function resetToSetup(){
+  board={};reserves={white:TOTAL_SLABS,black:TOTAL_SLABS};
+  currentPlayer='white';turnPhase='place';
+  selected=null;validMoves=[];gameOver=false;logEntries=[];
+  document.getElementById('winner-wrap').classList.remove('show');
+  renderAll();
+}
+
+function renderAll(){
+  const wB=Object.values(board).filter(v=>v==='white').length;
+  const bB=Object.values(board).filter(v=>v==='black').length;
+  document.getElementById('cnt-white').textContent=reserves.white;
+  document.getElementById('cnt-black').textContent=reserves.black;
+  document.getElementById('board-white').textContent='board: '+wB;
+  document.getElementById('board-black').textContent='board: '+bB;
+  document.getElementById('pc-white').className='pc'+(currentPlayer==='white'&&!gameOver?' aw':'');
+  document.getElementById('pc-black').className='pc'+(currentPlayer==='black'&&!gameOver?' ab':'');
+  const wC=largestConnected('white'),bC=largestConnected('black');
+  document.getElementById('conn-w').textContent=wC;
+  document.getElementById('conn-b').textContent=bC;
+  document.getElementById('conn-need').textContent='need '+HALF;
+  document.getElementById('bar-w').style.width=Math.round(Math.min(wC/HALF,1)*100)+'%';
+  document.getElementById('bar-b').style.width=Math.round(Math.min(bC/HALF,1)*100)+'%';
+  if(!gameOver){
+    const isPlace=turnPhase==='place';
+    document.getElementById('sdot').className=isPlace?'place':'move';
+    document.getElementById('pbadge').className=isPlace?'place':'move';
+    document.getElementById('pbadge').textContent=isPlace?'Place':'Move';
+    setStat(isPlace
+      ?`${cap(currentPlayer)}'s turn — place a slab`
+      :`${cap(currentPlayer)}'s turn — ${selected?'choose destination':'select a slab to move'}`);
+  }
+  const vp=turnPhase==='place'&&!gameOver?new Set(getValidPlacements()):new Set();
+  const cl=document.getElementById('col-labels');
+  cl.innerHTML='<div style="width:26px;flex-shrink:0"></div>';
+  for(let c=0;c<SIZE;c++){const d=document.createElement('div');d.className='cl';d.textContent=c+1;cl.appendChild(d);}
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+  for(let r=SIZE-1;r>=0;r--){
+    const row=document.createElement('div');row.className='brow';
+    const rl=document.createElement('div');rl.className='rl';rl.textContent=r+1;row.appendChild(rl);
+    for(let c=0;c<SIZE;c++){
+      const k=ck(c,r);
+      const cell=document.createElement('div');cell.className='cell';
+      cell.setAttribute('data-key',k);
+      if(selected===k)cell.classList.add('sel');
+      else if(validMoves.includes(k))cell.classList.add('vm');
+      else if(!board[k]&&vp.has(k))cell.classList.add('vp');
+      cell.onclick=(()=>{const cc=c,rr=r;return()=>onCellClick(cc,rr);})();
+      cell.addEventListener('touchstart',(()=>{const cc=c,rr=r;return e=>{e.preventDefault();onTouchStart(e,cc,rr);}})(),{passive:false});
+      cell.addEventListener('touchend',(()=>{const cc=c,rr=r;return e=>{e.preventDefault();onTouchEnd(e,cc,rr);}})(),{passive:false});
+      if(board[k]){
+        const sl=document.createElement('div');
+        sl.className='slab '+board[k]+(selected===k?' sel':'');
+        cell.appendChild(sl);
+      }
+      row.appendChild(cell);
+    }
+    grid.appendChild(row);
+  }
+  document.getElementById('log').innerHTML=logEntries.map(e=>`<div class="le">${e}</div>`).join('');
+}
+</script>
+</body>
+</html>
