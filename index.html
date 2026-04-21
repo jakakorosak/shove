@@ -149,6 +149,9 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
 .rb .ex{background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--blue);padding:10px 14px;border-radius:0 5px 5px 0;font-family:'DM Mono',monospace;font-size:12px;margin:8px 0 12px;color:var(--text);white-space:pre;line-height:1.6;}
 .wr{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:5px;}
 .rn{display:flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--blue);color:#0d1a26;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px;font-family:'DM Mono',monospace;}
+.demo-wrap{margin:14px 0 18px;text-align:center;}
+.demo-canvas{border:1px solid var(--border);border-radius:6px;background:#f5f4f0;max-width:100%;height:auto;}
+.demo-caption{font-size:12px;color:var(--text3);margin-top:6px;font-style:italic;}
 </style>
 </head>
 <body>
@@ -218,14 +221,20 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
         <li>Two players: White and Black</li>
         <li>Each player begins with a reserve of slabs (default 18), all off the board</li>
       </ul>
+
       <h2>Turn Structure</h2>
       <p>White moves first. <strong style="color:var(--text)">Both steps are mandatory every turn.</strong> If either cannot be completed, you lose immediately.</p>
       <h3>Step 1 — Place</h3>
-      <p>Take one slab from your reserve and place it on any empty square. You may not place on a square orthogonally adjacent to any opponent slab.</p>
+      <p>Take a slab from your reserve and place it on any empty square not orthogonally adjacent to an opponent slab.</p>
       <h3>Step 2 — Move</h3>
-      <p>Select one of your slabs and slide it one square orthogonally (up, down, left, right — no diagonals). If the destination is occupied, a push occurs.</p>
+      <p>Slide one of your slabs one square orthogonally. If the destination is occupied, a push occurs.</p>
+      <div class="demo-wrap">
+        <canvas class="demo-canvas" id="demo-basic" width="280" height="140"></canvas>
+        <div class="demo-caption" id="cap-basic">White places, then moves one square right</div>
+      </div>
+
       <h2>Pushing</h2>
-      <p>A push moves the entire contiguous line of slabs in the direction of travel by one square. It is legal only if the last slab has room (empty square or off the edge) and your pushing power meets or exceeds the opponent slabs in the line.</p>
+      <p>A push moves the entire contiguous line of slabs one square in the direction of travel. It is legal if the last slab has room and your pushing power meets or exceeds the opponent slabs in the line.</p>
       <h3>Pushing power</h3>
       <ul>
         <li>The moving slab itself</li>
@@ -233,36 +242,46 @@ h1{font-family:'DM Serif Display',serif;font-size:32px;font-weight:400;color:var
         <li>All your slabs contiguously behind the moving slab</li>
       </ul>
       <p>Your own slabs in the line offer no resistance.</p>
-      <div class="ex">w w b b  →  2 pushers vs 2 blacks  →  legal
-w b w b  →  2 pushers vs 2 blacks  →  legal
-w b b b  →  1 pusher  vs 3 blacks  →  illegal</div>
+      <div class="demo-wrap">
+        <canvas class="demo-canvas" id="demo-push" width="280" height="200"></canvas>
+        <div class="demo-caption" id="cap-push">W W B B — 2 whites push 2 blacks</div>
+      </div>
+
       <h2>Removal</h2>
       <h3>Pushed off the edge</h3>
       <p>Any slab pushed off the board returns to its owner's reserve and may be placed again.</p>
+      <div class="demo-wrap">
+        <canvas class="demo-canvas" id="demo-pushoff" width="280" height="140"></canvas>
+        <div class="demo-caption" id="cap-pushoff">Black slab pushed off the edge → reserve</div>
+      </div>
       <h3>Isolation</h3>
-      <p>After every move, any slab that had at least one orthogonal neighbour before the move but has none after is removed and returned to reserve. Slabs already isolated before the move are unaffected.</p>
-      <p>A player may deliberately isolate their own slab to return it to reserve — useful for freeing placement squares or escaping worse outcomes.</p>
+      <p>After every move, any slab that had a neighbour before the move but has none after is returned to reserve. A player may deliberately isolate their own slab as a tactical choice.</p>
+      <div class="demo-wrap">
+        <canvas class="demo-canvas" id="demo-isolate" width="280" height="140"></canvas>
+        <div class="demo-caption" id="cap-isolate">White moves away — black slab becomes isolated and is removed</div>
+      </div>
+
       <h2>Winning</h2>
-      <p>Win conditions are checked immediately after the move step:</p>
-      <div class="wr"><span class="rn">1</span><span><strong style="color:var(--text)">No legal turn.</strong> Your opponent cannot place (reserve empty or all squares adjacent to your slabs) or cannot move or push any slab. Either alone is a loss.</span></div>
-      <div class="wr"><span class="rn">2</span><span><strong style="color:var(--text)">Board clear.</strong> After a push, your opponent has zero slabs on the board. Reserve does not matter.</span></div>
-      <div class="wr"><span class="rn">3</span><span><strong style="color:var(--text)">Connection.</strong> After a push, your slabs form a single orthogonally connected region covering at least half the squares of the board.</span></div>
+      <p>Win conditions are checked after placement and after every move:</p>
+      <div class="wr"><span class="rn">1</span><span><strong style="color:var(--text)">No legal turn.</strong> Opponent cannot place or cannot move any slab.</span></div>
+      <div class="wr"><span class="rn">2</span><span><strong style="color:var(--text)">Board clear.</strong> After a push, opponent has zero slabs on the board.</span></div>
+      <div class="wr"><span class="rn">3</span><span><strong style="color:var(--text)">Connection.</strong> Your slabs form a single connected region covering at least half the board.</span></div>
+      <div class="demo-wrap">
+        <canvas class="demo-canvas" id="demo-win" width="280" height="280"></canvas>
+        <div class="demo-caption" id="cap-win">White achieves a connected region covering half the board</div>
+      </div>
+
       <h2>Notation</h2>
-      <p>Each turn is two mandatory tokens separated by a space. Coordinates are written as <code>col,row</code>, both numbered from 1.</p>
-      <ul>
-        <li>Placement: <code>3,4</code></li>
-        <li>Move or push: <code>3,4-3,5</code></li>
-      </ul>
-      <p>White and black turns share a numbered line, separated by <code>|</code>:</p>
+      <p>Each turn is two tokens separated by a space. Coordinates are <code>col,row</code> from 1. White and black share a line separated by <code>|</code>:</p>
       <div class="ex">1.  3,4 2,4-2,5  |  5,6 4,6-4,5
 2.  1,2 3,2-3,3  |  6,6 5,6-5,5</div>
+
       <h2>Clarifications</h2>
       <ul>
         <li>Both steps are mandatory. Inability to complete either is an immediate loss.</li>
         <li>Orthogonal means up, down, left, right only. Diagonals count for nothing.</li>
         <li>The placement restriction applies only during placement. Movement may bring slabs into contact freely.</li>
         <li>Slabs always return to reserve when removed. They may be placed again.</li>
-        <li>Win conditions 2 and 3 are triggered only by a push, not a simple move to an empty square.</li>
       </ul>
     </div>
   </div>
@@ -278,6 +297,7 @@ function showTab(t){
   document.getElementById('game-tab').style.display=t==='game'?'block':'none';
   document.getElementById('rules-area').style.display=t==='rules'?'block':'none';
   document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['game','rules'][i]===t));
+  if(t==='rules')setTimeout(initDemos,50);
 }
 
 function ck(c,r){return c+','+r;}
@@ -650,6 +670,222 @@ function renderAll(){
   }
   document.getElementById('log').innerHTML=logEntries.map(e=>`<div class="le">${e}</div>`).join('');
 }
+
+// ── Demo animations ───────────────────────────────────────────────────────────
+const DCELL=44, DPAD=6, DANIM=600;
+
+function demoColor(type){ return type==='white'?'#ffffff':type==='black'?'#222222':null; }
+function demoBorder(type){ return type==='white'?'#aaaaaa':'#555555'; }
+
+function drawDemoGrid(ctx,cols,rows,highlights){
+  ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const x=DPAD+c*DCELL, y=DPAD+r*DCELL;
+      ctx.fillStyle='#f0ede8';
+      ctx.strokeStyle='#dddbd4';
+      ctx.lineWidth=1;
+      ctx.beginPath();ctx.roundRect(x,y,DCELL-2,DCELL-2,3);ctx.fill();ctx.stroke();
+      // highlights
+      if(highlights){
+        const key=c+','+r;
+        if(highlights[key]){
+          ctx.fillStyle=highlights[key];
+          ctx.beginPath();ctx.roundRect(x,y,DCELL-2,DCELL-2,3);ctx.fill();
+          ctx.strokeStyle='#dddbd4';ctx.stroke();
+        }
+      }
+    }
+  }
+}
+
+function drawSlab(ctx,c,r,type,alpha,offsetX,offsetY){
+  alpha=alpha===undefined?1:alpha;
+  offsetX=offsetX||0; offsetY=offsetY||0;
+  const x=DPAD+c*DCELL+offsetX, y=DPAD+r*DCELL+offsetY;
+  const pad=6;
+  ctx.globalAlpha=alpha;
+  ctx.fillStyle=demoColor(type);
+  ctx.strokeStyle=demoBorder(type);
+  ctx.lineWidth=1.5;
+  ctx.shadowColor='rgba(0,0,0,0.15)';ctx.shadowBlur=3;ctx.shadowOffsetY=1;
+  ctx.beginPath();ctx.roundRect(x+pad,y+pad,DCELL-2-pad*2,DCELL-2-pad*2,2);ctx.fill();ctx.stroke();
+  ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  ctx.globalAlpha=1;
+}
+
+function drawArrow(ctx,fromC,fromR,toC,toR){
+  const x1=DPAD+fromC*DCELL+DCELL/2, y1=DPAD+fromR*DCELL+DCELL/2;
+  const x2=DPAD+toC*DCELL+DCELL/2, y2=DPAD+toR*DCELL+DCELL/2;
+  ctx.strokeStyle='#378ADD';ctx.lineWidth=2;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.setLineDash([]);
+  // arrowhead
+  const angle=Math.atan2(y2-y1,x2-x1);
+  const hs=8;
+  ctx.fillStyle='#378ADD';
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-hs*Math.cos(angle-0.4),y2-hs*Math.sin(angle-0.4));
+  ctx.lineTo(x2-hs*Math.cos(angle+0.4),y2-hs*Math.sin(angle+0.4));
+  ctx.closePath();ctx.fill();
+}
+
+function lerp(a,b,t){return a+(b-a)*t;}
+
+function runDemo(canvasId,frames,loop){
+  const canvas=document.getElementById(canvasId);
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  let fi=0,start=null,animId=null;
+  const HOLD=900, TRANS=500;
+
+  function drawFrame(frame){
+    drawDemoGrid(ctx,frame.cols||5,frame.rows||3,frame.highlights);
+    (frame.slabs||[]).forEach(s=>drawSlab(ctx,s.c,s.r,s.type,s.alpha));
+    if(frame.arrow)drawArrow(ctx,frame.arrow[0],frame.arrow[1],frame.arrow[2],frame.arrow[3]);
+    if(frame.label){
+      ctx.fillStyle='#5f5e5a';ctx.font='11px DM Sans,sans-serif';ctx.textAlign='center';
+      ctx.fillText(frame.label,canvas.width/2,canvas.height-6);
+    }
+  }
+
+  function animate(ts){
+    if(!start)start=ts;
+    const elapsed=ts-start;
+    const total=HOLD+TRANS;
+    const t=elapsed%total;
+    const phase=Math.floor(elapsed/total);
+    const curFi=phase%frames.length;
+    const nextFi=(phase+1)%frames.length;
+
+    if(t<HOLD){
+      drawFrame(frames[curFi]);
+    } else {
+      // interpolate between frames for moving slabs
+      const prog=(t-HOLD)/TRANS;
+      const ease=prog<0.5?2*prog*prog:1-Math.pow(-2*prog+2,2)/2;
+      const cur=frames[curFi], next=frames[nextFi];
+      drawDemoGrid(ctx,cur.cols||5,cur.rows||3,null);
+      // draw static slabs from next frame that aren't moving
+      const movingIds=new Set((cur.moving||[]).map(m=>m.id));
+      (next.slabs||[]).forEach(s=>{
+        if(!movingIds.has(s.id))drawSlab(ctx,s.c,s.r,s.type,s.alpha);
+      });
+      // animate moving slabs
+      (cur.moving||[]).forEach(m=>{
+        const ns=(next.slabs||[]).find(s=>s.id===m.id);
+        if(!ns)return;
+        const ic=lerp(m.c,ns.c,ease), ir=lerp(m.r,ns.r,ease);
+        drawSlab(ctx,ic,ir,m.type,1);
+      });
+    }
+
+    if(loop!==false||(curFi<frames.length-1||t<HOLD)){
+      animId=requestAnimationFrame(animate);
+    }
+  }
+
+  // start when rules tab is visible
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){start=null;animId=requestAnimationFrame(animate);}
+      else if(animId){cancelAnimationFrame(animId);animId=null;}
+    });
+  },{threshold:0.1});
+  obs.observe(canvas);
+}
+
+function initDemos(){
+  // Demo 1: basic place then move
+  runDemo('demo-basic',[
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:1,r:1,type:'white'}],
+     highlights:{'2,1':'rgba(155,143,212,0.25)'},
+     label:'Step 1: place a slab'},
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:1,r:1,type:'white'},{id:'w2',c:2,r:1,type:'white'}],
+     moving:[{id:'w2',c:2,r:1,type:'white'}],
+     arrow:[2,1,3,1],
+     label:'Step 2: move one square'},
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:1,r:1,type:'white'},{id:'w2',c:3,r:1,type:'white'}],
+     label:'Move complete'},
+  ]);
+
+  // Demo 2: pushing w w b b
+  runDemo('demo-push',[
+    {cols:5,rows:4,
+     slabs:[{id:'w1',c:0,r:1,type:'white'},{id:'w2',c:1,r:1,type:'white'},{id:'b1',c:2,r:1,type:'black'},{id:'b2',c:3,r:1,type:'black'}],
+     label:'W W B B — white to move right'},
+    {cols:5,rows:4,
+     slabs:[{id:'w1',c:0,r:1,type:'white'},{id:'w2',c:1,r:1,type:'white'},{id:'b1',c:2,r:1,type:'black'},{id:'b2',c:3,r:1,type:'black'}],
+     moving:[{id:'w1',c:0,r:1,type:'white'},{id:'w2',c:1,r:1,type:'white'},{id:'b1',c:2,r:1,type:'black'},{id:'b2',c:3,r:1,type:'black'}],
+     arrow:[0,1,1,1],
+     label:'2 pushers ≥ 2 blacks — legal!'},
+    {cols:5,rows:4,
+     slabs:[{id:'w1',c:1,r:1,type:'white'},{id:'w2',c:2,r:1,type:'white'},{id:'b1',c:3,r:1,type:'black'},{id:'b2',c:4,r:1,type:'black'}],
+     label:'Whole line shifts right'},
+  ]);
+
+  // Demo 3: push off edge
+  runDemo('demo-pushoff',[
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:1,r:1,type:'white'},{id:'w2',c:2,r:1,type:'white'},{id:'b1',c:3,r:1,type:'black'}],
+     label:'W W B — black is at the edge'},
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:1,r:1,type:'white'},{id:'w2',c:2,r:1,type:'white'},{id:'b1',c:3,r:1,type:'black'}],
+     moving:[{id:'w1',c:1,r:1,type:'white'},{id:'w2',c:2,r:1,type:'white'},{id:'b1',c:3,r:1,type:'black'}],
+     arrow:[1,1,2,1],
+     label:'White pushes right…'},
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:2,r:1,type:'white'},{id:'w2',c:3,r:1,type:'white'}],
+     label:'Black falls off → returns to reserve'},
+  ]);
+
+  // Demo 4: isolation
+  runDemo('demo-isolate',[
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:1,r:1,type:'white'},{id:'b1',c:2,r:1,type:'black'}],
+     label:'White and black are neighbours'},
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:1,r:1,type:'white'},{id:'b1',c:2,r:1,type:'black'}],
+     moving:[{id:'w1',c:1,r:1,type:'white'}],
+     arrow:[1,1,1,0],
+     label:'White moves away…'},
+    {cols:4,rows:3,
+     slabs:[{id:'w1',c:1,r:0,type:'white'}],
+     highlights:{'2,1':'rgba(201,107,107,0.2)'},
+     label:'Black isolated → removed to reserve'},
+  ]);
+
+  // Demo 5: connection win
+  runDemo('demo-win',[
+    {cols:6,rows:6,
+     slabs:[
+       {id:'a',c:1,r:1,type:'white'},{id:'b',c:2,r:1,type:'white'},{id:'c',c:3,r:1,type:'white'},
+       {id:'d',c:1,r:2,type:'white'},{id:'e',c:2,r:2,type:'white'},{id:'f',c:3,r:2,type:'white'},
+       {id:'g',c:1,r:3,type:'white'},{id:'h',c:2,r:3,type:'white'},{id:'i',c:3,r:3,type:'white'},
+       {id:'j',c:4,r:4,type:'black'},{id:'k',c:5,r:4,type:'black'},
+     ],
+     label:'White builds a connected region…'},
+    {cols:6,rows:6,
+     slabs:[
+       {id:'a',c:1,r:1,type:'white'},{id:'b',c:2,r:1,type:'white'},{id:'c',c:3,r:1,type:'white'},
+       {id:'d',c:1,r:2,type:'white'},{id:'e',c:2,r:2,type:'white'},{id:'f',c:3,r:2,type:'white'},
+       {id:'g',c:1,r:3,type:'white'},{id:'h',c:2,r:3,type:'white'},{id:'i',c:3,r:3,type:'white'},
+       {id:'jj',c:1,r:4,type:'white'},
+       {id:'j',c:4,r:4,type:'black'},{id:'k',c:5,r:4,type:'black'},
+     ],
+     highlights:{'1,1':'rgba(109,181,138,0.2)','2,1':'rgba(109,181,138,0.2)','3,1':'rgba(109,181,138,0.2)',
+                 '1,2':'rgba(109,181,138,0.2)','2,2':'rgba(109,181,138,0.2)','3,2':'rgba(109,181,138,0.2)',
+                 '1,3':'rgba(109,181,138,0.2)','2,3':'rgba(109,181,138,0.2)','3,3':'rgba(109,181,138,0.2)',
+                 '1,4':'rgba(109,181,138,0.2)'},
+     label:'10 connected white slabs — win!'},
+  ]);
+}
+
+// initDemos is called from showTab when rules tab opens
 </script>
 </body>
 </html>
